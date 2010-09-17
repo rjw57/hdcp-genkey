@@ -25,7 +25,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import string, random, json
+import string, random
+
+# Magic required for google app engine
+try:
+	from django.utils import simplejson as json
+except:
+	import json
+
 from optparse import OptionParser
 
 MASTER_KEY_SRC = 'master-key.txt'

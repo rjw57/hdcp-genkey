@@ -1,0 +1,12 @@
+application: hdcpgen
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /keys/.*
+  script: appengine.py
+
+- url: /(index\.html)?
+  static_files: appengine_index.html
+  upload: appengine_index.html
