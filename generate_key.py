@@ -29,6 +29,18 @@ import string, random
 
 MASTER_KEY_SRC = 'master-key.txt'
 
+def main():
+	"""The main body of the program."""
+
+	# read the master key file
+	key_matrix = read_key_file(open(MASTER_KEY_SRC))
+
+	# generate a ksv
+	ksv = gen_ksv()
+
+	# generate a source key and output it
+	output_human_readable(ksv, gen_sink_key(ksv, key_matrix))
+
 def read_key_file(filelike):
 	"""Read a HDCP master key from a key file.
 
@@ -129,11 +141,6 @@ def output_human_readable(ksv, key):
 	print '\nKey:'
 	print string.join(map(lambda x: string.join(x, ' '), zip(*[key_strs]*5)), '\n')
 
-# read the master key file
-key_matrix = read_key_file(open(MASTER_KEY_SRC))
-
-# generate a ksv
-ksv = gen_ksv()
-
-# generate a source key and output it
-output_human_readable(ksv, gen_sink_key(ksv, key_matrix))
+# run the 'main' function if this file is being executed directly
+if __name__ == '__main__':
+	main()
