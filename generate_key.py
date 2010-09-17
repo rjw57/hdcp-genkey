@@ -26,20 +26,46 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import string, random
+from optparse import OptionParser
 
 MASTER_KEY_SRC = 'master-key.txt'
 
 def main():
 	"""The main body of the program."""
 
+	parser = OptionParser()
+
+	parser.add_option('-m', '--master', dest='master_key_file',
+		help='load master key from FILE', metavar='FILE',
+		default='master-key.txt')
+	
+	parser.add_option('-k', '--sink', action='store_true', 
+		dest='gen_sink', default=False, 
+		help='generate a sink key rather than a source key')
+	
+	parser.add_option('', '--ksv', dest='ksv',
+		help='use a specific KSV expressed in hexadecimal',
+		metavar='KSV', default=None)
+
+	(options, args) = parser.parse_args()
+
 	# read the master key file
-	key_matrix = read_key_file(open(MASTER_KEY_SRC))
+	key_matrix = read_key_file(open(options.master_key_file))
 
-	# generate a ksv
-	ksv = gen_ksv()
+	# generate a ksv if necessary
+	if options.ksv is not None:
+		ksv = int(options.ksv, 16)
+	else:
+		ksv = gen_ksv()
 
-	# generate a source key and output it
-	output_human_readable(ksv, gen_sink_key(ksv, key_matrix))
+	# generate a key
+	if options.gen_sink:
+		key = gen_sink_key(ksv, key_matrix)
+	else:
+		key = gen_source_key(ksv, key_matrix)
+
+	# output the key
+	output_human_readable(ksv, key, options.gen_sink)
 
 def read_key_file(filelike):
 	"""Read a HDCP master key from a key file.
@@ -127,19 +153,24 @@ def gen_sink_key(ksv, key_matrix):
 
 	return gen_source_key(ksv, transpose(key_matrix))
 
-def output_human_readable(ksv, key):
+def output_human_readable(ksv, key, is_sink):
 	"""Print a human readable version of the KSV and key.
 
 	The KSV is a single integer. The key is a list of 40 integers."""
 
 	# output the ksv
-	print 'KSV:'
-	print '%010x' % ksv
+	print('KSV: %010x' % ksv)
 
 	# output the key
 	key_strs = map(lambda x: '%014x' % x, key)
-	print '\nKey:'
-	print string.join(map(lambda x: string.join(x, ' '), zip(*[key_strs]*5)), '\n')
+
+	print('')
+	if is_sink:
+		print('Sink Key:')
+	else:
+		print('Source Key:')
+
+	print(string.join(map(lambda x: string.join(x, ' '), zip(*[key_strs]*5)), '\n'))
 
 # run the 'main' function if this file is being executed directly
 if __name__ == '__main__':
