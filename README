@@ -12,6 +12,7 @@ Options:
   -k, --sink            generate a sink key rather than a source key
   --ksv=KSV             use a specific KSV expressed in hexadecimal
   -j, --json            output key and KSV as JSON
+  -t, --test            generate source and sink keys and test they work
 
 Examples:
 
@@ -21,5 +22,8 @@ Examples:
  # Generate a source key with a random KSV and output the result in a 
  # human-readable form
  ./generate_key.py
+
+ # Run a self-test to make sure the source a sink key generation is consistent
+ ./generate_key.py -t
 
 % vim:spelllang=en_gb:spell

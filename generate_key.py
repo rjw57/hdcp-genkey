@@ -50,11 +50,20 @@ def main():
 	parser.add_option('-j', '--json', action='store_true', 
 		dest='output_json', default=False, 
 		help='output key and KSV as JSON')
+	
+	parser.add_option('-t', '--test', action='store_true', 
+		dest='do_test', default=False, 
+		help='generate source and sink keys and test they work')
 
 	(options, args) = parser.parse_args()
 
 	# read the master key file
 	key_matrix = read_key_file(open(options.master_key_file))
+
+	# if asked to do a test, do one and exit
+	if options.do_test:
+		do_test(key_matrix)
+		return
 
 	# generate a ksv if necessary
 	if options.ksv is not None:
@@ -73,6 +82,39 @@ def main():
 		output_json(ksv, key, options.gen_sink)
 	else:
 		output_human_readable(ksv, key, options.gen_sink)
+
+def do_test(key_matrix):
+	"""Perform a self-test.
+
+	Generate both a source key and sink key with random (different) KSVs
+	and test that the HDCP shared-key system works."""
+
+	print('Performing self test.')
+
+	# generate source key
+	src_ksv = gen_ksv() 
+	src_key = gen_source_key(src_ksv, key_matrix)
+	output_human_readable(src_ksv, src_key, False)
+
+	# generate sink key
+	snk_ksv = gen_ksv() 
+	snk_key = gen_sink_key(snk_ksv, key_matrix)
+	output_human_readable(snk_ksv, snk_key, True)
+
+	# add sink keys together according to src ksv
+	key1 = reduce(lambda x, y: (x+y) & 0xffffffffffffff, 
+		map(lambda x: x[1], filter(lambda x: src_ksv & (1<<x[0]), zip(range(40), snk_key))))
+
+	# add source keys together according to sink ksv
+	key2 = reduce(lambda x, y: (x+y) & 0xffffffffffffff, 
+		map(lambda x: x[1], filter(lambda x: snk_ksv & (1<<x[0]), zip(range(40), src_key))))
+
+	print('\nGenerated keys: sink = %014x, source = %014x' % (key1, key2))
+
+	if key1 == key2:
+		print('Test PASSED')
+	else:
+		print('Test FAILED')
 
 def read_key_file(filelike):
 	"""Read a HDCP master key from a key file.
