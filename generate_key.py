@@ -58,7 +58,29 @@ def read_key_file(filelike):
 
 	return key_matrix
 
-def gen_source_key(key_matrix):
+def transpose(matrix):
+	"""Transpose a master key matrix.
+
+	This returns a copy of matrix which has been transposed."""
+
+	return zip(*matrix)
+
+def gen_ksv():
+	"""Generate a KSV.
+
+	A KSV is a forty-bit number that (in binary) consists of twenty ones
+	and twenty zeroes"""
+
+	# generate KSV - 20 1s and 20 0s
+	ksv = (['1'] * 20) + (['0'] * 20)
+
+	# permute KSV
+	random.shuffle(ksv)
+
+	# convert the binary to int
+	return int(string.join(ksv, ''), 2)
+
+def gen_source_key(ksv, key_matrix):
 	"""Generate a source key from the master key matrix passed.
 
 	To generate a source key, take a forty-bit number that (in binary)
@@ -68,20 +90,13 @@ def gen_source_key(key_matrix):
 	row), taking all elements modulo two to the power of fifty-six; this is
 	the source private key."""
 
-	# generate KSV - 20 1s and 20 0s
-	ksv = (['1'] * 20) + (['0'] * 20)
-
-	# permute KSV
-	random.shuffle(ksv)
-
-	# convert the binary to int
-	ksv_val = int(string.join(ksv, ''), 2)
+	# generate a list of bits for the KSV starting with the LSB
+	ksv_bits = map(lambda x: (ksv >> x) & 1, range(40))
 
 	# zip the master key matrix and the ksv s.t. the LSB of KSV is associated with
 	# the first row, etc. Then filter to only select those rows where the
 	# appropriate bit of the KSV is 1.
-	ksv.reverse()
-	master_rows = map(lambda x: x[1], filter(lambda x: x[0] == '1', zip(ksv, key_matrix)))
+	master_rows = map(lambda x: x[1], filter(lambda x: x[0] == 1, zip(ksv_bits, key_matrix)))
 
 	# now generate the key
 	key = [0] * 40
@@ -90,7 +105,15 @@ def gen_source_key(key_matrix):
 		# add row to key
 		key = map(lambda x: (x[0] + x[1]) & 0xffffffffffffff, zip(key, row))
 
-	return (ksv_val, key)
+	return key
+
+def gen_sink_key(ksv, key_matrix):
+	"""Generate a sink key from the master key matrix passed.
+
+	To generate a sink key, do the same as for a source key but the
+	transposed master matrix."""
+
+	return gen_source_key(ksv, transpose(key_matrix))
 
 def output_human_readable(ksv, key):
 	"""Print a human readable version of the KSV and key.
@@ -109,5 +132,8 @@ def output_human_readable(ksv, key):
 # read the master key file
 key_matrix = read_key_file(open(MASTER_KEY_SRC))
 
+# generate a ksv
+ksv = gen_ksv()
+
 # generate a source key and output it
-output_human_readable(*gen_source_key(key_matrix))
+output_human_readable(ksv, gen_sink_key(ksv, key_matrix))
