@@ -179,8 +179,10 @@ def output_json(ksv, key, is_sink):
 
 	The KSV is a single integer. The key is a list of 40 integers."""
 
-	print(json.dumps(
-		{ 'ksv': ksv, 'key': key, 'type': 'sink' if is_sink else 'source' },
+	print(json.dumps( {
+		'ksv': ('%010x' % ksv), 
+		'key': map(lambda x: '%014x' % x, key),
+		'type': 'sink' if is_sink else 'source' },
 		sort_keys=True, indent=True))
 
 # run the 'main' function if this file is being executed directly
