@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import string, random
+import string, random, json
 from optparse import OptionParser
 
 MASTER_KEY_SRC = 'master-key.txt'
@@ -46,6 +46,10 @@ def main():
 	parser.add_option('', '--ksv', dest='ksv',
 		help='use a specific KSV expressed in hexadecimal',
 		metavar='KSV', default=None)
+	
+	parser.add_option('-j', '--json', action='store_true', 
+		dest='output_json', default=False, 
+		help='output key and KSV as JSON')
 
 	(options, args) = parser.parse_args()
 
@@ -65,7 +69,10 @@ def main():
 		key = gen_source_key(ksv, key_matrix)
 
 	# output the key
-	output_human_readable(ksv, key, options.gen_sink)
+	if options.output_json:
+		output_json(ksv, key, options.gen_sink)
+	else:
+		output_human_readable(ksv, key, options.gen_sink)
 
 def read_key_file(filelike):
 	"""Read a HDCP master key from a key file.
@@ -164,13 +171,17 @@ def output_human_readable(ksv, key, is_sink):
 	# output the key
 	key_strs = map(lambda x: '%014x' % x, key)
 
-	print('')
-	if is_sink:
-		print('Sink Key:')
-	else:
-		print('Source Key:')
-
+	print('\n%s Key:' % ('Sink' if is_sink else 'Source'))
 	print(string.join(map(lambda x: string.join(x, ' '), zip(*[key_strs]*5)), '\n'))
+
+def output_json(ksv, key, is_sink):
+	"""Print a JSON version of the KSV and key.
+
+	The KSV is a single integer. The key is a list of 40 integers."""
+
+	print(json.dumps(
+		{ 'ksv': ksv, 'key': key, 'type': 'sink' if is_sink else 'source' },
+		sort_keys=True, indent=True))
 
 # run the 'main' function if this file is being executed directly
 if __name__ == '__main__':
