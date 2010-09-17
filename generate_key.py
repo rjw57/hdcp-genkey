@@ -96,6 +96,8 @@ def do_test(key_matrix):
 	src_key = gen_source_key(src_ksv, key_matrix)
 	output_human_readable(src_ksv, src_key, False)
 
+	print('')
+
 	# generate sink key
 	snk_ksv = gen_ksv() 
 	snk_key = gen_sink_key(snk_ksv, key_matrix)
