@@ -217,7 +217,7 @@ def output_human_readable(ksv, key, is_sink):
 
 	print('\n%s Key:' % ('Sink' if is_sink else 'Source'))
 	for idx in range(0, 40, 5):
-		print(string.join(key_strs[idx:idx+4], ' '))
+		print(string.join(key_strs[idx:idx+5], ' '))
 
 def output_json(ksv, key, is_sink):
 	"""Print a JSON version of the KSV and key.
