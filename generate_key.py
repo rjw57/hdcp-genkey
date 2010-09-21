@@ -111,12 +111,10 @@ def do_test(key_matrix):
 	output_human_readable(snk_ksv, snk_key, True)
 
 	# add sink keys together according to src ksv
-	key1 = reduce(lambda x, y: (x+y) & 0xffffffffffffff, 
-		( x[1] for x in zip(range(40), snk_key) if src_ksv & (1<<x[0]) ))
+	key1 = sum( x[1] for x in zip(range(40), snk_key) if src_ksv & (1<<x[0]) ) & 0xffffffffffffff
 
 	# add source keys together according to sink ksv
-	key2 = reduce(lambda x, y: (x+y) & 0xffffffffffffff, 
-		( x[1] for x in zip(range(40), src_key) if snk_ksv & (1<<x[0]) ))
+	key2 = sum( x[1] for x in zip(range(40), src_key) if snk_ksv & (1<<x[0]) ) & 0xffffffffffffff
 
 	print('\nGenerated keys: sink = %014x, source = %014x' % (key1, key2))
 
