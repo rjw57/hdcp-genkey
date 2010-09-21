@@ -112,11 +112,11 @@ def do_test(key_matrix):
 
 	# add sink keys together according to src ksv
 	key1 = reduce(lambda x, y: (x+y) & 0xffffffffffffff, 
-		map(lambda x: x[1], filter(lambda x: src_ksv & (1<<x[0]), zip(range(40), snk_key))))
+		( x[1] for x in zip(range(40), snk_key) if src_ksv & (1<<x[0]) ))
 
 	# add source keys together according to sink ksv
 	key2 = reduce(lambda x, y: (x+y) & 0xffffffffffffff, 
-		map(lambda x: x[1], filter(lambda x: snk_ksv & (1<<x[0]), zip(range(40), src_key))))
+		( x[1] for x in zip(range(40), src_key) if snk_ksv & (1<<x[0]) ))
 
 	print('\nGenerated keys: sink = %014x, source = %014x' % (key1, key2))
 
@@ -187,21 +187,21 @@ def gen_source_key(ksv, key_matrix):
 	the source private key."""
 
 	# generate a list of bits for the KSV starting with the LSB
-	ksv_bits = map(lambda x: (ksv >> x) & 1, range(40))
+	ksv_bits = ( (ksv >> x) & 1 for x in range(40) )
 
 	# zip the master key matrix and the ksv s.t. the LSB of KSV is associated with
 	# the first row, etc. Then filter to only select those rows where the
 	# appropriate bit of the KSV is 1.
-	master_rows = map(lambda x: x[1], filter(lambda x: x[0] == 1, zip(ksv_bits, key_matrix)))
+	master_rows = ( x[1] for x in zip(ksv_bits, key_matrix) if x[0] == 1 )
 
 	# now generate the key
 	key = [0] * 40
 
 	for row in master_rows:
 		# add row to key
-		key = map(lambda x: (x[0] + x[1]) & 0xffffffffffffff, zip(key, row))
+		key = [ (x[0] + x[1]) & 0xffffffffffffff for x in zip(key, row) ]
 
-	return key
+	return tuple(key)
 
 def gen_sink_key(ksv, key_matrix):
 	"""Generate a sink key from the master key matrix passed.
@@ -220,7 +220,7 @@ def output_human_readable(ksv, key, is_sink):
 	print('KSV: %010x' % ksv)
 
 	# output the key
-	key_strs = map(lambda x: '%014x' % x, key)
+	key_strs = [ '%014x' % x for x in key ]
 
 	print('\n%s Key:' % ('Sink' if is_sink else 'Source'))
 	for idx in range(0, 40, 5):
@@ -233,7 +233,7 @@ def output_json(ksv, key, is_sink):
 
 	print(json.dumps( {
 		'ksv': ('%010x' % ksv), 
-		'key': map(lambda x: '%014x' % x, key),
+		'key': [ '%014x' % x for x in key ],
 		'type': 'sink' if is_sink else 'source' },
 		sort_keys=True, indent=True))
 
