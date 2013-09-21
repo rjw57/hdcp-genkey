@@ -1,11 +1,12 @@
 application: hdcpgen
 version: 1
-runtime: python
+runtime: python27
 api_version: 1
+threadsafe: true
 
 handlers:
 - url: /keys/.*
-  script: appengine.py
+  script: appengine.application
 
 - url: /(index\.html)?
   static_files: appengine_index.html

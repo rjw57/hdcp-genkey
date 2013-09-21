@@ -1,11 +1,11 @@
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
-from django.utils import simplejson as json
-
+import json
+import webapp2
 from generate_key import *
 
-class KeysHandler(webapp.RequestHandler):
-	def __init__(self):
+class KeysHandler(webapp2.RequestHandler):
+	def __init__(self, request, response):
+		# Set self.request, self.response and self.app.
+		self.initialize(request, response)
 		self._key_matrix = read_key_file(open('master-key.txt'))
 
 	def _gen_json(self, ksv, key, is_sink):
@@ -14,7 +14,6 @@ class KeysHandler(webapp.RequestHandler):
 			'key': map(lambda x: '%014x' % x, key),
 			'type': 'sink' if is_sink else 'source' },
 			sort_keys=True, indent=False)
-
 
 	def get(self, key_type, ksv_string = None):
 		self.response.headers['Content-Type'] = 'application/json'
@@ -31,21 +30,15 @@ class KeysHandler(webapp.RequestHandler):
 		else:
 			raise RuntimeError('Unknown key type: %s' % key_type)
 
-		self.response.out.write(self._gen_json(ksv, key, True if key_type == 'sink' else False))
+		self.response.write(self._gen_json(ksv, key, True if key_type == 'sink' else False))
 
-class KsvHandler(webapp.RequestHandler):
+class KsvHandler(webapp2.RequestHandler):
 	def get(self):
 		self.response.headers['Content-Type'] = 'text/plain'
-		self.response.out.write('%010x' % gen_ksv())
+		self.response.write('%010x' % gen_ksv())
 
-application = webapp.WSGIApplication([
+application = webapp2.WSGIApplication([
 	('/keys/(sink|source)/([0-9a-f]{10})', KeysHandler),
 	('/keys/(sink|source)', KeysHandler),
 	('/keys/random_ksv', KsvHandler),
 	], debug=True)
-
-def main():
-	run_wsgi_app(application)
-
-if __name__ == "__main__":
-	main()

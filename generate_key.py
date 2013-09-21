@@ -25,13 +25,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import string, random
-
-# Magic required for google app engine
-try:
-	from django.utils import simplejson as json
-except:
-	import json
+import json
+import string
+import random
 
 from optparse import OptionParser
 
