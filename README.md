@@ -18,7 +18,7 @@ Options:
 
 Examples:
 
-```console
+```bash
 # Generate a sink key with KSV 0x54f0af39a8 and output the result in JSON
 ./generate_key.py -k --ksv 54f0af39a8 -j
 
